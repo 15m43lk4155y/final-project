@@ -23,7 +23,10 @@ class LessonAdmin(admin.ModelAdmin):
     inlines = [QuestionInline]
     list_display = ['title']
 
-admin.site.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    inlines = [ChoiceInline]
+
+admin.site.register(Question, QuestionAdmin)
 admin.site.register(Choice)
 
 admin.site.register(Course, CourseAdmin)

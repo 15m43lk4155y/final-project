@@ -117,20 +117,19 @@ def submit(request, course_id):
     submission = Submission.objects.create(enrollment=enrollment)
     submitted_anwsers = extract_answers(request)
     for choice_id in submitted_anwsers:
-        choice = get_object_or_404(Choice, pk=choice_id)
-        submission.choices.add(choice)
+        submission.choices.add(choice_id)
     submission_id = submission.id
-    return redirect('onlinecourse:show_exam_result', args=(course_id, submission_id))
+    return redirect('onlinecourse:show_exam_result', course_id=course_id, submission_id=submission_id)
 
 # <HINT> A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
-   submitted_anwsers = []
-   for key in request.POST:
-       if key.startswith('choice'):
-           value = request.POST[key]
-           choice_id = int(value)
-           submitted_anwsers.append(choice_id)
-   return submitted_anwsers
+    submitted_anwsers = []
+    for key in request.POST:
+        if key.startswith('choice'):
+            value = request.POST[key]
+            choice_id = int(value)
+            submitted_anwsers.append(choice_id)
+    return submitted_anwsers
 
 
 # <HINT> Create an exam result view to check if learner passed exam and show their question results and result for each question,
@@ -140,14 +139,18 @@ def extract_answers(request):
     # For each selected choice, check if it is a correct answer or not
     # Calculate the total score
 def show_exam_result(request, course_id, submission_id):
+    context = {}
+     
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
-    choices = submission.choices
+    choices = submission.choices.all()
+    questions = course.question_set.all()
+
     score = 0
-    print(choices)
-    # for choice in choices:
-    #     all_answers = choice.filter(is_correct=True).count()
-    #     selected_correct = choice.filter(is_correct=True, id__in=selected_ids).count()
+    for question in questions:
+        score += question.is_get_score(choices)
     
-    context['grade'] = score
-    return render(request, 'exam_result_bootstrap.html', context)
+    context['course'] = course
+    context['grade'] = round(score/len(questions)*100, 2)
+
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)

@@ -101,21 +101,22 @@ class Enrollment(models.Model):
     # Has a grade point for each question
     # Has question content
     # Other fields and methods you would like to design
+
 class Question(models.Model):
-    course = models.ManyToManyField(Course)
-    text = models.TextField()
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    text = models.TextField(default='Question')
     grade = models.FloatField()
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
 
     # <HINT> A sample model method to calculate if learner get the score of the question
     def is_get_score(self, selected_ids):
-       all_answers = self.choice_set.filter(is_correct=True).count()
-       selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-       if all_answers == selected_correct:
-           return True
-       else:
-           return False
-
+        all_answers = self.choice_set.filter(is_correct=True).count()
+        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        selected_incorrect = self.choice_set.filter(is_correct=False, id__in=selected_ids).count()
+        if all_answers == selected_correct and not selected_incorrect:
+            return True
+        else:
+            return False
 
 #  <HINT> Create a Choice Model with:
     # Used to persist choice content for a question
@@ -123,10 +124,11 @@ class Question(models.Model):
     # Choice content
     # Indicate if this choice of the question is a correct one or not
     # Other fields and methods you would like to design
+
 class Choice(models.Model):
-    question = models.ManyToManyField(Question)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     content = models.TextField()
-    correct = models.BooleanField()
+    is_correct = models.BooleanField()
 
 # <HINT> The submission model
 # One enrollment could have multiple submission
